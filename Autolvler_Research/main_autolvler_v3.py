@@ -2,17 +2,9 @@ import os
 import time
 import pyautogui
 import cv2
-import sys
-import os
-
-# Add the parent directory to the Python path
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(parent_dir)
-
-# Now import module
 from automation_engine import find_image
 
-hp_bar_path = r"hp_bar_template.png"
+hp_bar_path = r"C:\Users\baciu\Desktop\Neo\Conquer World\Auto_Lvler_Images\V2 - Prestige\full_hp_bar.png"
 
 template = cv2.imread(hp_bar_path)
 

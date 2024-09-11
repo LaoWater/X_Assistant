@@ -1,8 +1,7 @@
 import threading
-import keyboard
 import pyautogui
 import time
-import os
+import keyboard
 import numpy as np
 from PIL import Image
 from automation_engine import (capture_screen_area, get_hpbar_coor, extract_hp_value,
@@ -25,13 +24,6 @@ hp_potion_threshold = 500
 self_hp_bar_y, self_hp_bar_x, self_hp_bar_width, self_hp_bar_height = 444, 934, 55, 9
 bypass_region = (self_hp_bar_y, self_hp_bar_x, self_hp_bar_width, self_hp_bar_height)
 window_region = (0, 0, 0, 0)
-
-# Define the path for the 'TestingImages' directory in the current working directory
-current_dir = os.path.dirname(__file__)  # Gets the directory of the current script
-testing_images_dir = os.path.join(current_dir, 'TestingImages')
-
-# Define the full path to save the image
-image_save_path = os.path.join(testing_images_dir, 'SpiralParsedMatrixImage.png')
 
 
 class StopScriptException(Exception):
@@ -80,7 +72,7 @@ def find_pixel_by_color_in_active_window(color, tolerance=10):
                               self_hp_bar_width, self_hp_bar_height)
     screenshot = pyautogui.screenshot(region=window_region)
     try:
-        screenshot.save(image_save_path)
+        screenshot.save(r'C:\Users\baciu\Desktop\Neo\Conquer World\Auto_Lvler_Images\SearchedImageLvler.png')
     except Exception as e:
         print(f"Error saving image: {e}")
         print(f"Image size: {screenshot.size}, Mode: {screenshot.mode}")
@@ -114,6 +106,7 @@ def spiral_search(image_matrix, target_color, tolerance, adjusted_bypass_region,
             if 0 <= center_x + dx < image_matrix.shape[1] and 0 <= center_y + dy < image_matrix.shape[0]:
                 image_matrix[center_y + dy, center_x + dx] = [0, 0, 0]  # Marking in black
 
+
     image_matrix_parsed = image_matrix
     while 0 <= x < width and 0 <= y < height:
         for _ in range(2):  # Same step size for two directions then increase
@@ -125,7 +118,8 @@ def spiral_search(image_matrix, target_color, tolerance, adjusted_bypass_region,
                         pixel_color = image_matrix[y, x]
                         if np.all(np.abs(pixel_color - target_color) <= tolerance):
                             parsed_spiral_search = Image.fromarray(image_matrix_parsed.astype('uint8'))
-                            parsed_spiral_search.save(image_save_path)
+                            parsed_spiral_search.save(r'C:\Users\baciu\Desktop\Neo\Conquer '
+                                                      r'World\Auto_Lvler_Images\SpiralParsedMatrixImage.png')
                             # Measuring time
                             print(f"Spiral search comupting time inside function: {time.time() - spiral_start_time}")
                             return x, y  # Found the target color
@@ -139,7 +133,8 @@ def spiral_search(image_matrix, target_color, tolerance, adjusted_bypass_region,
         step_size += 1  # Increase step size after completing a   cycle in all directions
 
     parsed_spiral_search = Image.fromarray(image_matrix_parsed.astype('uint8'))
-    parsed_spiral_search.save(image_save_path)
+    parsed_spiral_search.save(r'C:\Users\baciu\Desktop\Neo\Conquer '
+                              r'World\Auto_Lvler_Images\SpiralParsedMatrixImage.png')
     return None  # Target color not found
 
 

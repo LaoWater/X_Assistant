@@ -1,3 +1,4 @@
-TestingImages/
-Auto_Lvler_Images/
-Images/
+/Images
+/Auto_Lvler_Images
+/.idea
+/.Conquer World
