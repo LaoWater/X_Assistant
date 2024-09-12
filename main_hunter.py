@@ -59,7 +59,7 @@ search_words = ['Ring', 'DragonBall', 'Necklace', 'Super', 'Boots', 'Bow', 'Supe
 
 # Define patterns
 pattern_0 = HuntingPattern(0, "DesertCity", "rectangular", "DL", "Up",
-                           80, 52, 80, 51, 10)
+                           81, 52, 80, 51, 10)
 
 pattern_1 = HuntingPattern(1, "BI", "rectangular", "DL", "Up",
                            15, 12, 15, 12, 7)

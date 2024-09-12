@@ -1,42 +1,23 @@
-import os
-from PIL import Image
+import keyboard
+import time
 
-# Images Path
-# Define the base path for images
-image_base_path = 'Images'
 
-# Using os.path.join to construct file paths
-hpbar_path = os.path.join(image_base_path, 'hp_image.PNG')
-try:
-    img = Image.open(hpbar_path)
-    # Proceed with your image processing
-except FileNotFoundError:
-    print(f"Error: '{hpbar_path}' not found in the specified directory.")
+def run_autofly_script():
+    print("Auto-Fly started. Press Ctrl+S to stop.")
+    time.sleep(2)
+    start_time = time.time()
 
-inventory_path = os.path.join(image_base_path, 'TheSocketeer_images', 'inventory.png')
-try:
-    img = Image.open(inventory_path)
-    # Proceed with your image processing
-except FileNotFoundError:
-    print(f"Error: '{inventory_path}' not found in the specified directory.")
+    while True:
+        for i in range(9):
+            keyboard.press_and_release('F10')
+            time.sleep(0.07)
+        time.sleep(7)
 
-system_chat_im_path1 = os.path.join(image_base_path, 'System_Chat_Top.JPG')
-try:
-    img = Image.open(system_chat_im_path1)
-    # Proceed with your image processing
-except FileNotFoundError:
-    print(f"Error: '{system_chat_im_path1}' not found in the specified directory.")
+        if keyboard.is_pressed('ctrl+s'):
+            print("Script stopped by Ctrl+S.")
+            break
 
-system_chat_im_path2 = os.path.join(image_base_path, 'System_Chat_Bottom.JPG')
-try:
-    img = Image.open(system_chat_im_path2)
-    # Proceed with your image processing
-except FileNotFoundError:
-    print(f"Error: '{system_chat_im_path2}' not found in the specified directory.")
 
-system_chat_im_path3 = os.path.join(image_base_path, 'System_Chat_Right.JPG')
-try:
-    img = Image.open(system_chat_im_path3)
-    # Proceed with your image processing
-except FileNotFoundError:
-    print(f"Error: '{system_chat_im_path3}' not found in the specified directory.")
+if __name__ == "__main__":
+    run_autofly_script()
+

@@ -30,13 +30,13 @@ excel_file = r'Accountant.xlsx'  # Update with your path
 
 # Global values for Image Processing - Stopping at first successful socket
 char_name = 'Lao'  # Current Character
-socketed_item = 'coat'
+socketed_item = 'boots'
 characters = ['BeWater', 'Arsonist', 'Lao', 'TheHunt(er)', 'Old-Shepherd']  # All user Characters used for Socketing
 search_words = [char_name, 'Amazing!', 'socket', 'first', 'upgraded']  # Replace with actual words
 
 # Global variables for Coordinates
-# For custom, set coord_Type to custom_X reference and map the new Coordinates if new Custom_1
-coord_type = 'Custom_1'
+# For custom, set coord_Type to custom_X reference and map the new Coordinates if new Custom_1, or Default
+coord_type = 'Default'
 # custom_map_coordinates()
 
 # NPCs Coordinates
