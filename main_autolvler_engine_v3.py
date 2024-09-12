@@ -5,12 +5,23 @@
 # Stuck Handle logic changed to "Experience" - most relevant here.
 # #############
 import random
+import re
+
+import cv2
 import keyboard
 import pyautogui
 import time
-from automation_engine import find_target_client, get_active_window_region_from_target_client
+import os
 
-char_name = 'Lao'
+from X_Assistant.image_processing_engine import extract_text_from_image_hp
+from automation_engine import find_target_client, get_active_window_region_from_target_client, find_image, \
+    capture_screen_area, get_hpbar_coor, extract_hp_value
+
+char_name = 'PonPon'
+
+script_running = True
+hp_thread_running = True
+hp_potion_threshold = 1500
 
 # Define pixel coordinates
 coords = {
@@ -27,6 +38,11 @@ coords = {
 # Define sets of up-related and down-related directions
 up_related = {'up', 'up_left', 'up_right'}
 down_related = {'down', 'down_left', 'down_right'}
+
+# Using Experience Bar for Stuck() Logic - If experience is un-changed for 4+ seconds -> Stuck
+current_directory = os.getcwd()
+# Construct the path to the ExperienceBar.png file
+exp_bar = os.path.join(current_directory, "Auto_Lvler_Images", "V2 - Prestige", "ExperienceBar.png")
 
 
 def find_char_center():
@@ -118,6 +134,93 @@ def random_mouse_loop():
         print(f"An error occurred: {e}")
 
 
+def valid_exp(text):
+    """
+    Extracts and validates the experience value from the given text.
+    Returns the extracted value if it is in the format UU.DDD, otherwise returns None.
+    """
+    # Regular expression pattern to match the format UU.DDD
+    pattern = r'(\d{1,2}\.\d{3})'
+
+    # Search for the pattern in the text
+    match = re.search(pattern, text)
+
+    if match:
+        # Return the matched value if it matches the desired format
+        return match.group(0)
+    else:
+        # No valid value found
+        return None
+
+
+def check_exp():
+    global script_running
+    stuck = False
+    exp_stuck_index = 0
+    previous_exp = None
+
+    while script_running:
+        print("Searching for Exp bar..")
+        exp_coords = find_image(exp_bar)
+        # pyautogui.moveTo(exp_coords)
+        time.sleep(1.2)
+
+        # Expanding Bar to read %
+        exp_bar_region = {'top': exp_coords[1] - 8, 'left': (exp_coords[0] - 45), 'width': 230, 'height': 14}
+        exp_bar_captured = capture_screen_area(exp_bar_region)
+
+        # Display the captured image
+        # cv2.imshow('Captured Experience Bar', exp_bar_captured)
+
+        # Extract text from the image
+        extracted_text = extract_text_from_image_hp(exp_bar_captured)
+        # Clean the extracted text of newlines and extra whitespace
+        cleaned_text = extracted_text.replace('\n', '').replace('\r', '').strip()
+        print(f"Extracted text from Exp Bar: {cleaned_text}")
+
+        # Validate the extracted experience value
+        valid_experience = valid_exp(cleaned_text)
+
+        if valid_experience:
+            print(f"Valid Experience Value: {valid_experience}")
+        else:
+            print("Invalid Experience Value, restarting iteration...")
+            continue  # Restart the loop iteration if the experience value is not valid
+
+        if valid_experience == previous_exp:
+            exp_stuck_index += 1
+        else:
+            exp_stuck_index = 0
+
+        # Exp did not change in 3 loops (~4 seconds)
+        if exp_stuck_index >= 3:
+            print("Character is stuck and not gaining Exp")
+
+        previous_exp = valid_experience
+
+
+def check_hp_bar():
+    global hp_potion_threshold, script_running, hp_thread_running
+    time.sleep(2)
+    print('Hp Bar Thread Starting..')
+    while script_running:
+        while script_running and hp_thread_running:  # Keep checking HP as long as the script is running
+            try:
+                hp_bar = get_hpbar_coor()
+                hp_img = capture_screen_area(hp_bar)
+                extracted_text = extract_text_from_image_hp(hp_img)
+                hp_value = extract_hp_value(extracted_text)
+                if hp_value is not None:
+                    print("HP: ", hp_value)
+                    if hp_value < hp_potion_threshold:
+                        keyboard.press_and_release('f1')
+            except Exception as e:
+                print(f"An error occurred during HP Thread: {e}")
+            time.sleep(1.2)
+        # Sleep while auto-leveler is not working
+        time.sleep(1)
+
+
 #######################
 ### Script Starting ###
 #######################
@@ -128,6 +231,9 @@ print(window_region)
 find_char_center()
 
 print("Starting AutoLvler V3...")
-random_mouse_loop()
-
+# random_mouse_loop()
 # mouse_movement_loop()
+
+check_exp()
+
+# check_hp_bar()
