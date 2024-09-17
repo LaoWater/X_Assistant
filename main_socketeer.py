@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------------------------
 # The Hunter
 #
-# This tool is an image-processing socketing-bot for CQ online.
+# This tool is an image-processing socketing-bot for X online.
 #
 # Author :  Neo
 # ----------------------------------------------------------------------------------------------

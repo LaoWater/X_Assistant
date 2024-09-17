@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------------------------
 # The Hunter
 #
-# This tool is an image-processing hunting-bot for CQ online.
+# This tool is an image-processing hunting-bot for X online.
 #
 # Author :  Neo
 # ----------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ search_words = ['Ring', 'DragonBall', 'Necklace', 'Super', 'Boots', 'Bow', 'Supe
 
 # Define patterns
 pattern_0 = HuntingPattern(0, "DesertCity", "rectangular", "DL", "Up",
-                           81, 52, 80, 51, 10)
+                           77, 52, 76, 51, 10)
 
 pattern_1 = HuntingPattern(1, "BI", "rectangular", "DL", "Up",
                            15, 12, 15, 12, 7)
@@ -187,7 +187,8 @@ def hunting_engine():
             duration = (0.2 + random.uniform(-0.04, 0.04)) / cyclone_adjustment  # Randomize duration
             pyautogui.moveTo(next_steps[3], duration=duration)
 
-            if stuck and False:
+            # Had False set - were there some glitches on direction 4? Let's see
+            if stuck:
                 handle_stuck(counter_4, next_steps[3][0], next_steps[3][1], direction=4)
 
             keyboard.press("ctrl")
@@ -209,7 +210,7 @@ def hunting_engine():
 
 # Function to check if character is stuck
 def check_if_stuck():
-    global prev_coor, stuck, stuck_counter
+    global prev_coor, stuck, stuck_counter, script_running
     print('Stuck Thread Starting...')
     time.sleep(2)  # Sleep at the start to give time for initial image capture
     while script_running:
@@ -238,6 +239,8 @@ def handle_stuck(counter, x_coords, y_coords, direction=1):
     duration = (0.2 + random.uniform(-0.04, 0.04)) / cyclone_adjustment  # Randomize duration
     next_steps = pattern_next_steps
 
+    normalized_click_to_counter = 3
+
     if stuck and stuck_counter == 1:
         if direction == 1:
             pyautogui.moveTo(x_coords, y_coords - 96, duration=duration)
@@ -247,7 +250,7 @@ def handle_stuck(counter, x_coords, y_coords, direction=1):
             pyautogui.moveTo(x_coords, y_coords - 96, duration=duration)
         elif direction == 4:
             pyautogui.moveTo(x_coords - 96, y_coords, duration=duration)
-        counter -= 2
+        counter -= normalized_click_to_counter
     elif stuck_counter == 3:
         if direction == 1:
             pyautogui.moveTo(x_coords, y_coords + 96, duration=duration)
@@ -257,7 +260,7 @@ def handle_stuck(counter, x_coords, y_coords, direction=1):
             pyautogui.moveTo(next_steps[3], duration=duration)
         elif direction == 4:
             pyautogui.moveTo(x_coords + 96, y_coords, duration=duration)
-        counter -= 1
+        counter -= normalized_click_to_counter
     elif stuck_counter == 5:
         if direction == 1:
             pyautogui.moveTo(next_steps[1], duration=duration)
@@ -267,7 +270,7 @@ def handle_stuck(counter, x_coords, y_coords, direction=1):
             pyautogui.moveTo(next_steps[3], duration=duration)
         elif direction == 4:
             pyautogui.moveTo(next_steps[0], duration=duration)
-        counter -= 1
+        counter -= normalized_click_to_counter
     elif stuck_counter > 6:
         print('Stuck for more than 5 seconds')
         script_paused = True
@@ -406,6 +409,8 @@ find_and_click_chat_button('Loot')
 # Calculating Pattern steps & limits.
 pattern_next_steps = find_pattern_steps(current_hunting_pattern.shape, current_hunting_pattern.start_point,
                                         current_hunting_pattern.start_direction, current_hunting_pattern.step_size)
+
+print(f"Pattern Next steps: {pattern_next_steps}")
 # To be possibly later Developed pattern_limits = find_pattern_limits()
 
 # Setting up hotkeys
