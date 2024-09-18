@@ -359,6 +359,9 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
                     # Linear interpolation
                     adjusted_probabilities[d] = (1 - scale) * default_probabilities[d] + scale * p_d_pattern
 
+            print(f"Adjusted Probabilities distribution based on predominant pattern {predominant_pattern} "
+                  f"and scale {scale}")
+            print(adjusted_probabilities)
             # Remove directions to prevent double up or down movements
             adjusted_probabilities_copy = adjusted_probabilities.copy()
             if previous_direction in up_related:
@@ -402,8 +405,7 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
 ### Def Main  ###
 #################
 
-def main():
-    # find_char_center()
+    # find_char_center()def main():
     print("Starting AutoLvler V3...")
 
     # random_mouse_loop()
