@@ -30,7 +30,7 @@ excel_file = r'Accountant.xlsx'  # Update with your path
 
 # Global values for Image Processing - Stopping at first successful socket
 char_name = 'Lao'  # Current Character
-socketed_item = 'boots'
+socketed_item = 'necklace'
 characters = ['BeWater', 'Arsonist', 'Lao', 'TheHunt(er)', 'Old-Shepherd']  # All user Characters used for Socketing
 search_words = [char_name, 'Amazing!', 'socket', 'first', 'upgraded']  # Replace with actual words
 

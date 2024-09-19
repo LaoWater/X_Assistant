@@ -288,6 +288,43 @@ def random_mouse_loop():
 # We are going to use Normalized Distribution and add on top of that the scaled predominant pattern.
 ######################################################################################################################
 
+def predominant_pattern_and_distribution(predominant_pattern, scale, patterns, directions, default_probabilities):
+    if predominant_pattern in patterns:
+        pattern_directions = patterns[predominant_pattern]
+        other_directions = [d for d in directions if d not in pattern_directions]
+    else:
+        pattern_directions = []
+        other_directions = directions.copy()
+
+    # Calculate pattern total default probabilities
+    pattern_total_default_prob = sum(default_probabilities[d] for d in pattern_directions)
+    other_total_default_prob = sum(default_probabilities[d] for d in other_directions)
+
+    adjusted_probabilities = {}
+    for d in directions:
+        if scale == 0 or not pattern_directions:
+            # Use default probabilities
+            adjusted_probabilities[d] = default_probabilities[d]
+        else:
+            if d in pattern_directions:
+                # Adjusted probability for pattern directions
+                p_d_pattern = (default_probabilities[d] / pattern_total_default_prob) * 0.8
+            else:
+                # Adjusted probability for other directions
+                p_d_pattern = (default_probabilities[d] / other_total_default_prob) * 0.2
+            # Linear interpolation
+            adjusted_probabilities[d] = (1 - scale) * default_probabilities[d] + scale * p_d_pattern
+
+    print(f"Adjusted Probabilities distribution based on predominant pattern {predominant_pattern} "
+          f"and scale {scale}")
+    print(adjusted_probabilities)
+
+    # Normalize probabilities after removal
+    total_prob = sum(adjusted_probabilities.values())
+    normalized_probabilities = {d: p / total_prob for d, p in adjusted_probabilities.items()}
+    return normalized_probabilities
+
+
 def random_mouse_loop_agent(predominant_pattern=None, scale=0):
     global stuck, script_running, coords
     """Randomly moves the mouse to one of the coords while preventing double up-related or down-related movements.
@@ -310,6 +347,8 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
     directions = list(coords.keys())
 
     # Relative speeds (higher means faster) due to Game mechanics (Character and Maps knowledge base)
+    # Higher-Speed = character will finish a full map run on target direction faster
+    # Therefore, the probability distribution for balanced movement must be inversed to Speed
     speeds = {
         'up': 1.0,  # Fastest
         'down': 1.0,  # Fastest
@@ -331,53 +370,11 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
     # Validate scale
     scale = max(0, min(scale, 1))  # Ensure scale is between 0 and 1
 
+    normalized_probabilities = predominant_pattern_and_distribution(predominant_pattern, scale,
+                                                                    patterns, directions, default_probabilities)
+
     try:
         while script_running:
-            if predominant_pattern in patterns:
-                pattern_directions = patterns[predominant_pattern]
-                other_directions = [d for d in directions if d not in pattern_directions]
-            else:
-                pattern_directions = []
-                other_directions = directions.copy()
-
-            # Calculate pattern total default probabilities
-            pattern_total_default_prob = sum(default_probabilities[d] for d in pattern_directions)
-            other_total_default_prob = sum(default_probabilities[d] for d in other_directions)
-
-            adjusted_probabilities = {}
-            for d in directions:
-                if scale == 0 or not pattern_directions:
-                    # Use default probabilities
-                    adjusted_probabilities[d] = default_probabilities[d]
-                else:
-                    if d in pattern_directions:
-                        # Adjusted probability for pattern directions
-                        p_d_pattern = (default_probabilities[d] / pattern_total_default_prob) * 0.8
-                    else:
-                        # Adjusted probability for other directions
-                        p_d_pattern = (default_probabilities[d] / other_total_default_prob) * 0.2
-                    # Linear interpolation
-                    adjusted_probabilities[d] = (1 - scale) * default_probabilities[d] + scale * p_d_pattern
-
-            print(f"Adjusted Probabilities distribution based on predominant pattern {predominant_pattern} "
-                  f"and scale {scale}")
-            print(adjusted_probabilities)
-            # Remove directions to prevent double up or down movements
-            adjusted_probabilities_copy = adjusted_probabilities.copy()
-            if previous_direction in up_related:
-                for d in up_related:
-                    adjusted_probabilities_copy.pop(d, None)
-            elif previous_direction in down_related:
-                for d in down_related:
-                    adjusted_probabilities_copy.pop(d, None)
-
-            # If all directions are removed, reset adjusted_probabilities_copy
-            if not adjusted_probabilities_copy:
-                adjusted_probabilities_copy = adjusted_probabilities.copy()
-
-            # Normalize probabilities after removal
-            total_prob = sum(adjusted_probabilities_copy.values())
-            normalized_probabilities = {d: p / total_prob for d, p in adjusted_probabilities_copy.items()}
 
             # Select the next direction based on adjusted probabilities
             current_direction = random.choices(
@@ -385,6 +382,9 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
                 weights=list(normalized_probabilities.values()),
                 k=1
             )[0]
+
+            # Remove directions to prevent double up or down movements
+            ######## TBC
 
             if stuck:
                 print("Handling stuck by moving mouse to opposite direction than what should")
@@ -401,16 +401,19 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
         print(f"An error occurred: {e}")
 
 
+def exp_gain_rate():
+    return None
+
+
 #################
 ### Def Main  ###
 #################
 
-    # find_char_center()def main():
-    print("Starting AutoLvler V3...")
+# find_char_center()def main():
+print("Starting AutoLvler V3...")
 
-    # random_mouse_loop()
-    mouse_movement_loop()
-
+# random_mouse_loop()
+mouse_movement_loop()
 
 #######################
 ### Script Starting ###

@@ -59,7 +59,7 @@ search_words = ['Ring', 'DragonBall', 'Necklace', 'Super', 'Boots', 'Bow', 'Supe
 
 # Define patterns
 pattern_0 = HuntingPattern(0, "DesertCity", "rectangular", "DL", "Up",
-                           77, 52, 76, 51, 10)
+                           75, 51, 74, 51, 10)
 
 pattern_1 = HuntingPattern(1, "BI", "rectangular", "DL", "Up",
                            15, 12, 15, 12, 7)
@@ -219,7 +219,9 @@ def check_if_stuck():
             time.sleep(1)
             continue
 
-        time.sleep(1.17)  # Time Between Checks
+        # Checking lower values, I wonder what's the threshold
+        # In which gets_stuck gets triggered when character just left click-attacks a mob
+        time.sleep(0.77)  # Time Between Checks
         with stuck_lock:  # Acquire lock before checking
             # print("Starting stuck capture...")
             current_coor = get_cq_map_coordinates()
@@ -384,7 +386,7 @@ def execute_get_out():
         keyboard.press_and_release('f1')
         time.sleep(1)
     for _ in range(2):  # Get out
-        keyboard.press_and_release('f4')
+        keyboard.press_and_release('f8')
         time.sleep(0.1)
     stop_script()
 
