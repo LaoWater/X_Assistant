@@ -290,39 +290,68 @@ def random_mouse_loop():
 
 def predominant_pattern_and_distribution(predominant_pattern, scale, patterns, directions, default_probabilities):
     if predominant_pattern in patterns:
-        pattern_directions = patterns[predominant_pattern]
-        other_directions = [d for d in directions if d not in pattern_directions]
+        predominant_pattern_directions = patterns[predominant_pattern]
+        other_directions = [d for d in directions if d not in predominant_pattern_directions]
     else:
-        pattern_directions = []
+        predominant_pattern_directions = []
         other_directions = directions.copy()
 
+    # Validate & Normalize scale
+    normalized_scale = float(scale / 100)
+    # scale = max(0, min(normalized_scale, 1))
+
     # Calculate pattern total default probabilities
-    pattern_total_default_prob = sum(default_probabilities[d] for d in pattern_directions)
+    predominant_pattern_total_default_prob = sum(default_probabilities[d] for d in predominant_pattern_directions)
     other_total_default_prob = sum(default_probabilities[d] for d in other_directions)
 
+    # Step 1: Calculate total increase for predominant pattern directions
+    predominant_increase = 0  # Store the total increase for predominant pattern directions
     adjusted_probabilities = {}
+
+    print(f"\nStep 1: Adjusting probabilities for predominant pattern {predominant_pattern} "
+          f"directions with scale {normalized_scale}")
     for d in directions:
-        if scale == 0 or not pattern_directions:
-            # Use default probabilities
-            adjusted_probabilities[d] = default_probabilities[d]
+        if d in predominant_pattern_directions:
+            p_d_pattern = default_probabilities[d] / predominant_pattern_total_default_prob
+            # Calculate the adjusted probability (limit the increase to a reasonable amount based on scale)
+            adjusted_probabilities[d] = ((1 - normalized_scale) * default_probabilities[d]
+                                         + normalized_scale * p_d_pattern)
+            predominant_increase += (adjusted_probabilities[d] - default_probabilities[d])  # Track increase
         else:
-            if d in pattern_directions:
-                # Adjusted probability for pattern directions
-                p_d_pattern = (default_probabilities[d] / pattern_total_default_prob) * 0.8
-            else:
-                # Adjusted probability for other directions
-                p_d_pattern = (default_probabilities[d] / other_total_default_prob) * 0.2
-            # Linear interpolation
-            adjusted_probabilities[d] = (1 - scale) * default_probabilities[d] + scale * p_d_pattern
+            adjusted_probabilities[d] = default_probabilities[d]  # Initialize with default
 
-    print(f"Adjusted Probabilities distribution based on predominant pattern {predominant_pattern} "
-          f"and scale {scale}")
-    print(adjusted_probabilities)
+    print(f"Adjusted probabilities: {adjusted_probabilities}")
+    print(f"Total Increase for Predominant Directions: {predominant_increase}")
 
-    # Normalize probabilities after removal
-    total_prob = sum(adjusted_probabilities.values())
-    normalized_probabilities = {d: p / total_prob for d, p in adjusted_probabilities.items()}
-    return normalized_probabilities
+    # Step 2: Redistribute the increase across non-predominant directions
+    if predominant_increase > 0:
+        total_non_pattern_prob = sum(default_probabilities[d] for d in other_directions)
+        print(f"Step 2: Redistributing the increase ({predominant_increase}) among non-predominant directions...")
+        print(f"Total Probability for Non-Predominant Directions: {total_non_pattern_prob}")
+
+        for d in other_directions:
+            # Calculate the proportion of the non-predominant pattern this direction occupies
+            redistribution_factor = default_probabilities[d] / total_non_pattern_prob
+            redistribution_amount = min(predominant_increase, default_probabilities[d] * 0.5)  # Limit reduction
+            # Subtract the redistribution amount proportionally
+            adjusted_probabilities[d] -= redistribution_amount
+
+    print(f"Step 2 Completed: Adjusted probabilities redistributed: {adjusted_probabilities}")
+
+    # Step 3: Ensure total probability sums to 1 by adjusting any residuals
+    total_adjusted_prob = sum(adjusted_probabilities.values())
+    residual = 1 - total_adjusted_prob
+
+    print(f"Step 3: Ensuring total probability sums to 1...")
+    print(f"Total Adjusted Probability before residual adjustment: {total_adjusted_prob}, Residual: {residual}")
+
+    # Distribute the residual back proportionally across all directions to make the sum exactly 1
+    for d in adjusted_probabilities:
+        adjusted_probabilities[d] += residual * (adjusted_probabilities[d] / total_adjusted_prob)
+
+    print("Final Adjusted Probabilities:", adjusted_probabilities)
+
+    return adjusted_probabilities
 
 
 def random_mouse_loop_agent(predominant_pattern=None, scale=0):
@@ -367,11 +396,10 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
 
     print(f"Default Probabilities for Char movement: f{default_probabilities})")
 
-    # Validate scale
-    scale = max(0, min(scale, 1))  # Ensure scale is between 0 and 1
-
     normalized_probabilities = predominant_pattern_and_distribution(predominant_pattern, scale,
                                                                     patterns, directions, default_probabilities)
+
+    total_directions_counter = {direction: 0 for direction in directions}
 
     try:
         while script_running:
@@ -383,6 +411,9 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
                 k=1
             )[0]
 
+            # Increment the counter for the selected direction
+            total_directions_counter[current_direction] += 1
+
             # Remove directions to prevent double up or down movements
             ######## TBC
 
@@ -391,7 +422,7 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
 
             print(f"\nAI Agent Moving mouse randomly to {current_direction}")  # Move the mouse
             move_mouse_to(current_direction)
-            wait_for_and_handle_stuck(10, current_direction)
+            wait_for_and_handle_stuck(13, current_direction)
             if check_stop():
                 raise StopScriptException()
 
@@ -399,6 +430,9 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
 
     except Exception as e:
         print(f"An error occurred: {e}")
+
+    # Print the direction counts
+    print(f"Total Directions Counter: {total_directions_counter}")
 
 
 def exp_gain_rate():
@@ -413,7 +447,7 @@ def exp_gain_rate():
 print("Starting AutoLvler V3...")
 
 # random_mouse_loop()
-mouse_movement_loop()
+# mouse_movement_loop()
 
 #######################
 ### Script Starting ###
@@ -427,7 +461,7 @@ if __name__ == "__main__":
     hp_check_thread.start()
     exp_check_thread.start()
 
-    random_mouse_loop_agent()
+    random_mouse_loop_agent('R-L', 10)
     # random_mouse_loop()
     # main()
 
