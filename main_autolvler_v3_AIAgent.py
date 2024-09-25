@@ -14,15 +14,19 @@ import os
 
 from X_Assistant.image_processing_engine import extract_text_from_image_hp
 from automation_engine import find_target_client, find_image, \
-    capture_screen_area, get_hpbar_coor, extract_hp_value
+    capture_screen_area, get_hpbar_coor, extract_hp_value, get_cq_map_coordinates
 
 char_name = 'Lao'
 
+# Global flags and counters
+stuck_lock = threading.Lock()
 script_running = True
 hp_thread_running = True
 hp_potion_threshold = 2777
+exp_stuck = False
+coords_stuck = False
 stuck = False
-exp_stuck_index = 0
+stuck_index = 0
 
 # Define pixel coordinates
 coords = {
@@ -67,7 +71,7 @@ def move_mouse_to(coords_name):
     pyautogui.moveTo(x, y)
 
 
-def opposite_direction(direction):
+def opposite_direction(direction, random_choice=False):
     # Define a dictionary mapping each direction to its opposite
     opposites = {
         'up': 'down',
@@ -80,31 +84,16 @@ def opposite_direction(direction):
         'down_right': 'up_left'
     }
 
+    # If random_choice is True, pick a random direction except the current direction and its opposite
+    if random_choice:
+        possible_directions = [dir for dir in opposites if dir != direction and opposites[dir] != direction]
+        return random.choice(possible_directions)
+
     # Check if the input direction is valid and return the opposite
     if direction in opposites:
         return opposites[direction]
     else:
         return "Invalid direction"
-
-
-def wait_for_and_handle_stuck(seconds, current_direction):
-    global stuck, exp_stuck_index
-    """Waits for a given number of seconds, checking for exit condition."""
-    end_time = time.time() + seconds
-    while time.time() < end_time:
-        if check_stop():
-            raise StopScriptException()
-        if stuck:
-            handling_stuck_direction = opposite_direction(current_direction)
-            move_mouse_to(handling_stuck_direction)
-            stuck = False
-            # Give time to get un-stuck
-            exp_stuck_index = 0
-            wait_for_and_handle_stuck(2.5, handling_stuck_direction)
-            # time.sleep(1)
-
-        time.sleep(0.15)  # Sleep for a short time to reduce CPU usage
-    return False
 
 
 def stop_script():
@@ -142,40 +131,96 @@ def valid_exp(text):
         return None
 
 
+def wait_for_and_handle_stuck(seconds, current_direction):
+    global exp_stuck, coords_stuck, stuck_index
+    """Waits for a given number of seconds, checking for exit condition."""
+    end_time = time.time() + seconds
+    while time.time() < end_time:
+        if check_stop():
+            raise StopScriptException()
+        if exp_stuck and coords_stuck:
+            print(f"Character is not moving nor gaining Exp.. (exp_stuck: {exp_stuck}, coords_stuck: {coords_stuck})")
+            if stuck_index == 1:
+                handling_stuck_direction = opposite_direction(current_direction, False )
+                print(f"(Stuck) Moving character to opposite direction: {handling_stuck_direction}")
+                move_mouse_to(handling_stuck_direction)
+            else:
+                handling_stuck_direction = opposite_direction(current_direction, True)
+                print(f"(Stuck) Moving character to random direction: {handling_stuck_direction}")
+                move_mouse_to(handling_stuck_direction)
+
+            # Correcting the assignment
+            exp_stuck = False
+            coords_stuck = False
+            # Give time to get un-stuck
+            stuck_index += 1
+            wait_for_and_handle_stuck(2.5, handling_stuck_direction)
+            # time.sleep(1)
+
+        time.sleep(0.15)  # Sleep for a short time to reduce CPU usage
+    return False
+
+
+# Function to check if character is stuck
+def check_coords_stuck():
+    global coords_stuck, script_running
+    prev_coor = None
+    # print('Stuck Thread Starting...')
+    time.sleep(1.1)  # Sleep at the start to give time for initial image capture
+    while script_running:
+        # print("Parsing stuck thread with Stuck counter = ", stuck_counter)
+        time.sleep(1.2)  # Time Between Checks
+        with stuck_lock:  # Acquire lock before checking
+            # print("Starting stuck capture...")
+            current_coor = get_cq_map_coordinates()
+            # print("Parsed stuck coordinates")
+            if prev_coor is not None and current_coor is not None and prev_coor == current_coor and current_coor != '':
+                coords_stuck = True
+                print("Character not moving, at coordinates: ", current_coor, prev_coor)
+                time.sleep(2)
+            else:
+                prev_coor = current_coor
+                coords_stuck = False
+
+
 def check_exp_stuck():
-    global script_running, stuck, exp_stuck_index
-    stuck = False
+    global script_running, exp_stuck, coords_stuck
+    exp_stuck = False
     exp_stuck_index = 0
     previous_exp = None
-    time.sleep(2)
+    valid_experience = None
+    exp_gain_tracker = []
+    time.sleep(0.88)
 
     while script_running:
+        valid_experience = None
         # print("Searching for Exp bar...")
         exp_coords = find_image(exp_bar)
         # pyautogui.moveTo(exp_coords)
-        time.sleep(1.2)
+        time.sleep(0.88)
 
         # Expanding Bar to read %
         exp_bar_region = {'top': exp_coords[1] - 8, 'left': (exp_coords[0] - 45), 'width': 230, 'height': 14}
         try:
             exp_bar_captured = capture_screen_area(exp_bar_region)
+            # Extract text from the image
+            extracted_text = extract_text_from_image_hp(exp_bar_captured)
+            # Clean the extracted text of newlines and extra whitespace
+            cleaned_text = extracted_text.replace('\n', '').replace('\r', '').strip()
+            # print(f"Extracted text from Exp Bar: {cleaned_text}")
+
+            # Validate the extracted experience value
+            valid_experience = valid_exp(cleaned_text)
         except Exception as e:
             print(f"An error occurred while capturing the screen area: {e}")
 
         # Display the captured image
         # cv2.imshow('Captured Experience Bar', exp_bar_captured)
 
-        # Extract text from the image
-        extracted_text = extract_text_from_image_hp(exp_bar_captured)
-        # Clean the extracted text of newlines and extra whitespace
-        cleaned_text = extracted_text.replace('\n', '').replace('\r', '').strip()
-        # print(f"Extracted text from Exp Bar: {cleaned_text}")
-
-        # Validate the extracted experience value
-        valid_experience = valid_exp(cleaned_text)
-
         if valid_experience:
+            valid_experience = float(valid_experience)
             print(f"Valid Experience Value: {valid_experience}")
+            exp_gain_tracker.append(valid_experience)
         else:
             print("Invalid Experience Value, restarting iteration...")
             continue  # Restart the loop iteration if the experience value is not valid
@@ -185,13 +230,15 @@ def check_exp_stuck():
         else:
             exp_stuck_index = 0
 
-        # Exp did not change in 3 loops (~4 seconds)
-        if exp_stuck_index >= 3:
-            stuck = True
-            print("Character is stuck and not gaining Exp")
-            time.sleep(3)
+        # Exp did not change in 2 loops (~1.5 seconds) and character didn't move
+        if exp_stuck_index >= 2:
+            exp_stuck = True
+            print("Character is not gaining Exp..")
+            time.sleep(2)
 
         previous_exp = valid_experience
+
+    print(f"Exp Gain Tracker: {exp_gain_tracker}")
 
 
 def check_hp_bar():
@@ -207,7 +254,7 @@ def check_hp_bar():
                 extracted_text = extract_text_from_image_hp(hp_img)
                 hp_value = extract_hp_value(extracted_text)
                 if hp_value is not None:
-                    print("HP: ", hp_value)
+                    # print("HP: ", hp_value)
                     previous_valid_hp = hp_value
                     if hp_value < hp_potion_threshold:
                         keyboard.press_and_release('f1')
@@ -278,7 +325,7 @@ def random_mouse_loop():
 
 ######################################################################################################################
 # Introducing: AI Agent for random mouse movement with Knowledge Base of Game mechanics.
-# Game mechanics and structure makes character movement go in rectangulars of (l, 1.25*l (=L) and 1.35*l (diagonal))
+# Game mechanics and structure makes character movement go in rectangles of (l, 1.25*l (=L) and 1.35*l (diagonal))
 # Map is also defined as a rectangular of same size ratios.
 # Therefore, the default distribution is wrong if approached equally - as characters moves at a faster unit
 # speed when clicking up then when clicking left/right/ur/dl/ur/dr.
@@ -435,7 +482,13 @@ def random_mouse_loop_agent(predominant_pattern=None, scale=0):
     print(f"Total Directions Counter: {total_directions_counter}")
 
 
+# To Implement
+
 def exp_gain_rate():
+    return None
+
+
+def improved_stuck():
     return None
 
 
@@ -458,12 +511,15 @@ if __name__ == "__main__":
     keyboard.add_hotkey('space', stop_script)  # Stop hotkey
     hp_check_thread = threading.Thread(target=check_hp_bar)
     exp_check_thread = threading.Thread(target=check_exp_stuck)
+    coords_check_thread = threading.Thread(target=check_coords_stuck)
     hp_check_thread.start()
     exp_check_thread.start()
+    coords_check_thread.start()
 
-    random_mouse_loop_agent('R-L', 10)
+    random_mouse_loop_agent('R-L', 25)
     # random_mouse_loop()
     # main()
 
     hp_check_thread.join()
     exp_check_thread.join()
+    coords_check_thread.join()

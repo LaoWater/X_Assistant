@@ -165,4 +165,9 @@ Scale: 98, Probability Distribution: 'left' = 36.2%, 'up_left' = 5.0%, 'up_right
 Scale: 100, Probability Distribution: 'left' = 36.4%, 'up_left' = 5.0%, 'up_right' = 5.0%, 'right' = 36.4%, 'up' = 3.7%, 'down' = 3.7%, 'down_left' = 5.0%, 'down_right' = 5.0%
 
 
+
+AI Agent in Action:
+Final Adjusted Probabilities: {'left': 0.27013422818791943, 'up_left': 0.08389261744966442, 'up_right': 0.08389261744966442, 'right': 0.27013422818791943, 'up': 0.06208053691275167, 'down': 0.06208053691275167, 'down_left': 0.08389261744966442, 'down_right': 0.08389261744966442}
+
+Total Directions Counter: {'left': 56, 'up_left': 17, 'up_right': 24, 'right': 64, 'up': 17, 'down': 12, 'down_left': 26, 'down_right': 29}
 """

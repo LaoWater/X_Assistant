@@ -52,14 +52,15 @@ hp_threshold = 2000
 # Duration for which the script should run (in seconds)
 run_duration = 3600  # Adjust this value to your desired duration
 
-char_name = 'Lao'
+# Char Names: Lao, BeWater
+char_name = 'BeWater'
 
 # Customizable Loot stopping words
 search_words = ['Ring', 'DragonBall', 'Necklace', 'Super', 'Boots', 'Bow', 'SuperDragonBall', 'Bag']  # Loot
 
 # Define patterns
 pattern_0 = HuntingPattern(0, "DesertCity", "rectangular", "DL", "Up",
-                           75, 51, 74, 51, 10)
+                           74, 51, 74, 51, 10)
 
 pattern_1 = HuntingPattern(1, "BI", "rectangular", "DL", "Up",
                            15, 12, 15, 12, 7)
