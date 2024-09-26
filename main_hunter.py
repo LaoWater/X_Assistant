@@ -53,7 +53,7 @@ hp_threshold = 2000
 run_duration = 3600  # Adjust this value to your desired duration
 
 # Char Names: Lao, BeWater
-char_name = 'BeWater'
+char_name = 'Lao'
 
 # Customizable Loot stopping words
 search_words = ['Ring', 'DragonBall', 'Necklace', 'Super', 'Boots', 'Bow', 'SuperDragonBall', 'Bag']  # Loot

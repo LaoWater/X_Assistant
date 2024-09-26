@@ -131,31 +131,45 @@ def valid_exp(text):
         return None
 
 
+def wait_for(seconds):
+    end_time = time.time() + seconds
+    while time.time() < end_time:
+        if check_stop():
+            raise StopScriptException()
+        time.sleep(0.15)  # Sleep for a short time to reduce CPU usage
+    return False
+
+
 def wait_for_and_handle_stuck(seconds, current_direction):
     global exp_stuck, coords_stuck, stuck_index
     """Waits for a given number of seconds, checking for exit condition."""
+    if not coords_stuck:
+        stuck_index = 0
     end_time = time.time() + seconds
     while time.time() < end_time:
         if check_stop():
             raise StopScriptException()
         if exp_stuck and coords_stuck:
             print(f"Character is not moving nor gaining Exp.. (exp_stuck: {exp_stuck}, coords_stuck: {coords_stuck})")
-            if stuck_index == 1:
-                handling_stuck_direction = opposite_direction(current_direction, False )
+            if stuck_index == 0:
+                handling_stuck_direction = opposite_direction(current_direction, False)
                 print(f"(Stuck) Moving character to opposite direction: {handling_stuck_direction}")
                 move_mouse_to(handling_stuck_direction)
-            else:
+                # Correcting the assignment
+                exp_stuck = False
+                coords_stuck = False
+                # Wait to see if flags remain false, especially coords
+                wait_for(1.3)
+                stuck_index += 1
+            if coords_stuck:
                 handling_stuck_direction = opposite_direction(current_direction, True)
                 print(f"(Stuck) Moving character to random direction: {handling_stuck_direction}")
                 move_mouse_to(handling_stuck_direction)
-
-            # Correcting the assignment
-            exp_stuck = False
-            coords_stuck = False
-            # Give time to get un-stuck
-            stuck_index += 1
-            wait_for_and_handle_stuck(2.5, handling_stuck_direction)
-            # time.sleep(1)
+                # Correcting the assignment
+                exp_stuck = False
+                coords_stuck = False
+                wait_for(1.3)
+                stuck_index += 1
 
         time.sleep(0.15)  # Sleep for a short time to reduce CPU usage
     return False
@@ -190,7 +204,7 @@ def check_exp_stuck():
     previous_exp = None
     valid_experience = None
     exp_gain_tracker = []
-    time.sleep(0.88)
+    time.sleep(1.04)
 
     while script_running:
         valid_experience = None
