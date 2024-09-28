@@ -204,7 +204,7 @@ def check_exp_stuck():
     previous_exp = None
     valid_experience = None
     exp_gain_tracker = []
-    time.sleep(1.04)
+    time.sleep(1.1)
 
     while script_running:
         valid_experience = None
