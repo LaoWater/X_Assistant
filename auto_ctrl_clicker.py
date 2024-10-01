@@ -7,7 +7,7 @@ import pygetwindow as gw
 
 # Duration for which the script runs (in seconds)
 RUN_DURATION = 10000
-WINDOW_TITLES = ["Lao - ", "TheHunt(er) - ", "Stafeny - "]
+WINDOW_TITLES = ["Lao - ", "TheHunt(er) - ", "BeWater - "]
 
 
 class ClickListener:
