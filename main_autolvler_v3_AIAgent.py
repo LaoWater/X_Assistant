@@ -264,11 +264,11 @@ def check_hp_bar():
         while script_running and hp_thread_running:  # Keep checking HP as long as the script is running
             try:
                 hp_bar = get_hpbar_coor()
-                hp_img = capture_screen_area(hp_bar)
+                hp_img = capture_screen_area(hp_bar) 
                 extracted_text = extract_text_from_image_hp(hp_img)
                 hp_value = extract_hp_value(extracted_text)
                 if hp_value is not None:
-                    # print("HP: ", hp_value)
+                    print("HP: ", hp_value)
                     previous_valid_hp = hp_value
                     if hp_value < hp_potion_threshold:
                         keyboard.press_and_release('f1')
